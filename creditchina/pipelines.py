@@ -7,6 +7,7 @@
 from scrapy import log
 import os
 os.chdir("/home/dyh/data/zhufang/zhengzhou")
+# os.chdir("E:/DLdata")
 class CreditchinaPipeline(object):
     def process_item(self, item, spider):
         # f = open("creditchina_coal","a")

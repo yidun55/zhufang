@@ -18,7 +18,14 @@ ITEM_PIPELINES=['creditchina.pipelines.CreditchinaPipeline']
 
 
 
+#LOG_FILE = 'E:/DLdata/log'
 LOG_FILE = '/home/dyh/data/zhufang/zhengzhou/log'
+
+
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware' : None,
+    'creditchina.rotate_useragent.RotateUserAgentMiddleware' :400
+    }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'creditchina (+http://www.yourdomain.com)'
