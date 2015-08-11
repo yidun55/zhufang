@@ -8,7 +8,7 @@ import urllib, time
 from creditchina.xpath_tool.extract_coal import *
 from creditchina.xpath_tool.extract_non_coal import *
 from creditchina.items import *
-from creditchina.xpath_tool.xpath_syn_list import xpath_syn_list
+from creditchina.xpath_tool.xpath_for_zhufang import xpath_syn_list
 import sys
 
 reload(sys)

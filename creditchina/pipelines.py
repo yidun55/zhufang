@@ -6,7 +6,7 @@
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 from scrapy import log
 import os
-os.chdir("E:/DLdata")
+os.chdir("/home/dyh/data/zhufang/zhengzhou")
 class CreditchinaPipeline(object):
     def process_item(self, item, spider):
         # f = open("creditchina_coal","a")

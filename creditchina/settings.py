@@ -18,7 +18,7 @@ ITEM_PIPELINES=['creditchina.pipelines.CreditchinaPipeline']
 
 
 
-LOG_FILE = 'E:/DLdata/log'
+LOG_FILE = '/home/dyh/data/zhufang/zhengzhou/log'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'creditchina (+http://www.yourdomain.com)'
