@@ -23,6 +23,7 @@ class CreditChina(Spider):
     download_delay=1
     start_urls = ['http://bzb.zzfdc.gov.cn/class-1-88.aspx']
     def __init__(self):
+        xpath_all = xpath_syn_list()   #获得含有xpath语句的列表
         self.filter_set = set()
         self.filter_set.add("http://bzb.zzfdc.gov.cn/class-1-88.aspx")
 
@@ -40,7 +41,7 @@ class CreditChina(Spider):
         抽取含有excel文件url的页面url
         """
         sel = Selector(text=response.body)
-        urls = sel.xpath(xpath_syn_list[0]).extract()
+        urls = sel.xpath(xpath_all[0]).extract()
         urls = ["http://bzb.zzfdc.gov.cn/" + url for url in urls]
         for url in urls:
             yield Request(url, callback=self.get_detail,dont_filter=True)
@@ -50,9 +51,9 @@ class CreditChina(Spider):
         下载excel表
         """
         sel = Selector(text=response.body)
-        url = sel.xpath(xpath_syn_list[1])
+        url = sel.xpath(xpath_all[1])
         url = "http://bzb.zzfdc.gov.cn" + url.split("..")[2]
-        file_name = sel.xpath(xpath_syn_list[2])
+        file_name = sel.xpath(xpath_all[2])
         file_name = file_name[0] + ".xls"
         excel_item = [(urls, file_name)]
         self.download_xls(excel_item)
