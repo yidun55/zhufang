@@ -3,10 +3,12 @@
 from scrapy import Spider
 from scrapy import Request
 from scrapy import log
+from scrapy import Selector
 import urllib, time
 from creditchina.xpath_tool.extract_coal import *
 from creditchina.xpath_tool.extract_non_coal import *
 from creditchina.items import *
+from creditchina.xpath_tool.xpath_syn_list import xpath_syn_list
 import sys
 
 reload(sys)
@@ -15,81 +17,61 @@ sys.setdefaultencoding("utf-8")
 
 class CreditChina(Spider):
     """
-    从信用中国网站上爬取安监局的数据
+    hack的creditchina的代码,直接抓取郑州市住房网的信息
     """
-    name = 'safety'
-    start_urls = ['http://www.creditchina.gov.cn/channel_record?t=']
+    name = 'zhengzhou'
+    download_delay=1
+    start_urls = ['http://bzb.zzfdc.gov.cn/class-1-88.aspx']
     def __init__(self):
-        self.data = {} 
-        self.data['sources'] = u'安全监管总局'
-        self.data['keyword'] = "."
-        self.data['type'] = ''
-        self.data['page'] = '1'
-        self.url = 'http://www.creditchina.gov.cn/channel_record?t='
+        self.filter_set = set()
+        self.filter_set.add("http://bzb.zzfdc.gov.cn/class-1-88.aspx")
 
-    def make_requests_from_url(self,url):
-        url = url + str(int(time.time()))
-        url = url + '&' + urllib.urlencode(self.data)
-        self.url = url 
-        return Request(url, callback=self.total_pages)
+    def parse(self, response):
+        sel = Selector(text=response.body)
+        urls = [response.url+"-"+str(i) for i in xrange(2,5)]
+        for url in urls:
+            if url in urls:
+                self.filter_set.add(url)
+                yield Request(url, callback=self.detail_url,
+                    dont_filter=True)
 
-    def total_pages(self, response):
+    def detail_url(self, response):
         """
-        抽取总页数
+        抽取含有excel文件url的页面url
         """
-        null = None
-        print response.body
-        r1_json = eval(response.body)
-        total = int(r1_json['totalPageCount'])
-        for i in range(1,total+1)[200:210]:
-            # print self.data, 'self.data'
-            print i, "page_number"
-            url = 'http://www.creditchina.gov.cn/channel_record?t='
-            self.data['page'] = i
-            url = url + str(int(time.time()))
-            url = url + '&' + urllib.urlencode(self.data)
-            # print url,'url1'
+        sel = Selector(text=response.body)
+        urls = sel.xpath(xpath_syn_list[0]).extract()
+        urls = ["http://bzb.zzfdc.gov.cn/" + url for url in urls]
+        for url in urls:
             yield Request(url, callback=self.get_detail,dont_filter=True)
 
     def get_detail(self, response):
         """
-        抽取详细信息的url
+        下载excel表
         """
-        null = None
-        r2_json = eval(response.body)
-        for el in r2_json['results']:
-            url = 'http://www.creditchina.gov.cn/channel_record_detail/{encryStr}#csdetail2'
-            # print el ,type(el)
-            # print type(r2_json['results'])
-            # print el['encryStr'].rstrip(), "el['encryStr'].rstrip()"
-            url = url.format(encryStr=el['encryStr'].rstrip())
-            # print url
-            yield Request(url, callback=self.detail,dont_filter=True)
+        sel = Selector(text=response.body)
+        url = sel.xpath(xpath_syn_list[1])
+        url = "http://bzb.zzfdc.gov.cn" + url.split("..")[2]
+        file_name = sel.xpath(xpath_syn_list[2])
+        file_name = file_name[0] + ".xls"
+        excel_item = [(urls, file_name)]
+        self.download_xls(excel_item)
 
-    def detail(self, response):
+    def callbackfunc(self,blocknum, blocksize, totalsize):
+        '''回调函数
+        @blocknum: 已经下载的数据块
+        @blocksize: 数据块的大小
+        @totalsize: 远程文件的大小
+        '''
+        percent = 100.0 * blocknum * blocksize / totalsize
+        if percent > 100:
+            percent = 100
+        print "%.2f%%"% percent
+
+    def download_xls(self,url_list):
         """
-        解析详细的信息
+        url_list = [('文件名','文件url')]
         """
-        sel = response.selector
-        item = CreditchinaItem()
-        classi = sel.xpath(u"//strong[text()='所属行业：']\
-            //../text()").extract()
-        # print classi,"classi"
-        if len(classi) == 0:
-            item['coal'] = coal_data_extract(response)
-            # print item['coal'], 'coal'
-        else:
-            item['non_coal'] = non_coal_data_extract(response)
-            # print item['non_coal']
-
-        yield item
-
-
-
-
-
-
-
-
-
-
+        os.chdir("/home/dyh/data/zhufang/zhengzhou")
+        for i in url_list:
+            urllib.urlretrieve(i[1], i[0], self.callbackfunc)
